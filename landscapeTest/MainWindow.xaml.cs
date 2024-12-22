@@ -12,7 +12,7 @@ namespace Fractal
 {
     public partial class MainWindow : Window
     {
-        private const double InitialSize = 5; // Размер начального квадрата
+        private const double InitialSize = 50; // Размер начального квадрата
         private MeshGeometry3D landscapeMesh;
         private GeometryModel3D landscapeModel;
         private Point _lastMouseDown;
@@ -65,7 +65,7 @@ namespace Fractal
 
             // Генерация ландшафта
             var size = InitialSize;
-            var heights = GenerateDiamondSquare(depth, randomness, size);
+            var heights = GenerateDiamondSquare(depth, randomness, 1);
             BuildMesh(heights, size);
 
 
@@ -166,7 +166,8 @@ namespace Fractal
                     // Добавляем боковые грани
                     AddSideTriangles(p1, p2, p3, heights[x, y], heights[x + 1, y], heights[x, y + 1], modelGroup);
                     AddSideTriangles(p2, p4, p3, heights[x + 1, y], heights[x + 1, y + 1], heights[x, y + 1], modelGroup);
-                
+                    
+                    
                 }
             }
 
