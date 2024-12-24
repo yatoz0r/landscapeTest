@@ -22,16 +22,19 @@ namespace Fractal
         public MainWindow()
         {
             InitializeComponent();
-            GenerateLandscape(5, 0.8);
+            GenerateLandscape(5, 0.8, 50, 1, 1);
         }
 
         private void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
-            // Получаем глубину рекурсии и коэффициент случайности из интерфейса
+            // Получаем параметры из интерфейса
             if (int.TryParse(DepthInput.Text, out int depth) &&
-                double.TryParse(RandomnessInput.Text.Replace('.', ','), out double randomness))
+                double.TryParse(RandomnessInput.Text.Replace('.', ','), out double randomness) &&
+                int.TryParse(GridSizeInput.Text, out int gridSize) &&
+                double.TryParse(HeightScaleInput.Text.Replace('.', ','), out double heightScale) &&
+                double.TryParse(NoiseFrequencyInput.Text.Replace('.', ','), out double noiseFrequency))
             {
-                GenerateLandscape(depth, randomness);
+                GenerateLandscape(depth, randomness, gridSize, heightScale, noiseFrequency);
             }
             else
             {
@@ -41,13 +44,13 @@ namespace Fractal
 
         private Color GetColorBasedOnHeight(double height)
         {
-            if (height < 0.3) return Colors.Blue;          // Вода
+            if (height < 0.3) return Colors.Aqua;         // Вода
             if (height < 0.4) return Colors.SandyBrown;    // Песок
-            if (height < 0.75) return Colors.Green;         // Трава
+            if (height < 0.75) return Colors.DarkOliveGreen;         // Трава
             return Colors.Gray;                            // Горы
         }
 
-        private void GenerateLandscape(int depth, double randomness)
+        private void GenerateLandscape(int depth, double randomness, int gridSize, double heightScale, double noiseFrequency)
         {
             // Создаем новый MeshGeometry3D
             landscapeMesh = new MeshGeometry3D();
@@ -64,16 +67,15 @@ namespace Fractal
             Viewport.Children.Add(modelVisual);
 
             // Генерация ландшафта
-            var size = InitialSize;
-            var heights = GenerateDiamondSquare(depth, randomness, 1);
-            BuildMesh(heights, size);
-
+            var size = gridSize;
+            var heights = GenerateDiamondSquare(depth, randomness, noiseFrequency);
+            BuildMesh(heights, size, heightScale);
 
             // Добавляем освещение
             var directionalLight = new DirectionalLight
             {
                 Color = Colors.White,
-                Direction = new Vector3D(-1, -1, -1) // Направление света
+                Direction = new Vector3D(-1, -3, -2) // Направление света
             };
             Viewport.Children.Add(new ModelVisual3D { Content = directionalLight });
 
@@ -85,10 +87,9 @@ namespace Fractal
             Viewport.Children.Add(new ModelVisual3D { Content = ambientLight });
             Camera.Transform = _cameraTransformGroup;
             LandscapeGroup.Children.Add(landscapeModel);
-
         }
 
-        private double[,] GenerateDiamondSquare(int depth, double randomness, double size)
+        private double[,] GenerateDiamondSquare(int depth, double randomness, double noiseFrequency)
         {
             int pointsPerSide = (int)Math.Pow(2, depth) + 1;
             double[,] heights = new double[pointsPerSide, pointsPerSide];
@@ -113,7 +114,7 @@ namespace Fractal
                                       heights[x, y + step] +
                                       heights[x + step, y + step]) / 4.0;
 
-                        heights[x + step / 2, y + step / 2] = avg + (random.NextDouble() * 2 - 1) * randomness * step / size;
+                        heights[x + step / 2, y + step / 2] = avg + (random.NextDouble() * 2 - 1) * randomness * step / noiseFrequency;
                     }
                 }
 
@@ -130,7 +131,7 @@ namespace Fractal
                         if (y >= step / 2) { sum += heights[x, y - step / 2]; count++; }
                         if (y + step / 2 < pointsPerSide) { sum += heights[x, y + step / 2]; count++; }
 
-                        heights[x, y] = sum / count + (random.NextDouble() * 2 - 1) * randomness * step / size;
+                        heights[x, y] = sum / count + (random.NextDouble() * 2 - 1) * randomness * step / noiseFrequency;
                     }
                 }
 
@@ -141,7 +142,7 @@ namespace Fractal
             return heights;
         }
 
-        private void BuildMesh(double[,] heights, double size)
+        private void BuildMesh(double[,] heights, double size, double heightScale)
         {
             int pointsPerSide = heights.GetLength(0);
             double step = size / (pointsPerSide - 1);
@@ -154,10 +155,10 @@ namespace Fractal
                 for (int y = 0; y < pointsPerSide - 1; y++)
                 {
                     // Определяем вершины треугольников
-                    var p1 = new Point3D(x * step - size / 2, y * step - size / 2, heights[x, y]);
-                    var p2 = new Point3D((x + 1) * step - size / 2, y * step - size / 2, heights[x + 1, y]);
-                    var p3 = new Point3D(x * step - size / 2, (y + 1) * step - size / 2, heights[x, y + 1]);
-                    var p4 = new Point3D((x + 1) * step - size / 2, (y + 1) * step - size / 2, heights[x + 1, y + 1]);
+                    var p1 = new Point3D(x * step - size / 2, y * step - size / 2, heights[x, y] * heightScale);
+                    var p2 = new Point3D((x + 1) * step - size / 2, y * step - size / 2, heights[x + 1, y] * heightScale);
+                    var p3 = new Point3D(x * step - size / 2, (y + 1) * step - size / 2, heights[x, y + 1] * heightScale);
+                    var p4 = new Point3D((x + 1) * step - size / 2, (y + 1) * step - size / 2, heights[x + 1, y + 1] * heightScale);
 
                     // Добавляем два треугольника
                     AddColoredTriangle(p1, p2, p3, modelGroup);
@@ -166,8 +167,6 @@ namespace Fractal
                     // Добавляем боковые грани
                     AddSideTriangles(p1, p2, p3, heights[x, y], heights[x + 1, y], heights[x, y + 1], modelGroup);
                     AddSideTriangles(p2, p4, p3, heights[x + 1, y], heights[x + 1, y + 1], heights[x, y + 1], modelGroup);
-                    
-                    
                 }
             }
 
@@ -179,7 +178,6 @@ namespace Fractal
             };
             Viewport.Children.Clear();
             Viewport.Children.Add(new ModelVisual3D { Content = modelGroup });
-
         }
 
         private void AddSideTriangles(Point3D p1, Point3D p2, Point3D p3, double height1, double height2, double height3, Model3DGroup modelGroup)

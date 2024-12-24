@@ -2,14 +2,13 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fractal"
-        Title="Фрактальный Ландшафт" Height="600" Width="800">
+        Title="Фрактальный Ландшафт" Height="720" Width="1280">
     <Grid>
         <Viewport3D Name="Viewport"
                     MouseDown="Viewport_MouseDown"
                     MouseUp="Viewport_MouseUp"
                     MouseMove="Viewport_MouseMove"
-                    MouseWheel="Viewport_MouseWheel"
-                    >
+                    MouseWheel="Viewport_MouseWheel">
             <!-- Камера -->
             <Viewport3D.Camera>
                 <PerspectiveCamera x:Name="Camera"
@@ -27,7 +26,7 @@
             <ModelVisual3D>
                 <ModelVisual3D.Content>
                     <Model3DGroup>
-                        <DirectionalLight Color="White" Direction="-1,-1,-1"/>
+                        <DirectionalLight x:Name="DirectionalLight" Color="White" Direction="-1,-1,-1"/>
                         <!-- Дополнительный рассеянный свет -->
                         <AmbientLight Color="#888888"/>
                     </Model3DGroup>
@@ -47,6 +46,21 @@
                 <TextBlock Text="Случайность:" VerticalAlignment="Center" Width="100"/>
                 <Slider Name="RandomnessSlider" Minimum="0" Maximum="1" Value="0.8" TickFrequency="0.1" IsSnapToTickEnabled="True" Width="100" Margin="0,0,0,10" />
                 <TextBox Name="RandomnessInput" Text="{Binding ElementName=RandomnessSlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="50" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Размер сетки:" VerticalAlignment="Center" Width="100"/>
+                <Slider Name="GridSizeSlider" Minimum="10" Maximum="100" Value="50" TickFrequency="10" IsSnapToTickEnabled="True" Width="100" Margin="0,0,0,10" />
+                <TextBox Name="GridSizeInput" Text="{Binding ElementName=GridSizeSlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="50" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Высота ландшафта:" VerticalAlignment="Center" Width="100"/>
+                <Slider Name="HeightScaleSlider" Minimum="0.1" Maximum="10" Value="1" TickFrequency="0.1" IsSnapToTickEnabled="True" Width="100" Margin="0,0,0,10" />
+                <TextBox Name="HeightScaleInput" Text="{Binding ElementName=HeightScaleSlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="50" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Частота шума:" VerticalAlignment="Center" Width="100"/>
+                <Slider Name="NoiseFrequencySlider" Minimum="0.1" Maximum="0.5" Value="1" TickFrequency="0.1" IsSnapToTickEnabled="True" Width="100" Margin="0,0,0,10" />
+                <TextBox Name="NoiseFrequencyInput" Text="{Binding ElementName=NoiseFrequencySlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="50" />
             </StackPanel>
             <Button Name="GenerateButton" Content="Сгенерировать" Click="GenerateButton_Click" />
         </StackPanel>
